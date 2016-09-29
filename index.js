@@ -17,6 +17,35 @@ var getHostList = function(done) {
   });
 };
 
+function scan(hostList,ip) {
+  return function(done) {
+    isHostUp(ip, function(err, isUp) {
+      if (isUp) {
+        arp.getMAC(ip, function(err,mac) {
+          if (err) {
+            console.log('error finding mac for '+ip);
+            done(err);
+          } else {
+            if (mac) {
+              macLower = mac.toString().toLowerCase();
+              var entry = hostList[macLower];
+              if (entry) {
+                console.log(entry.compdesc + ' is up');
+              } else {
+                console.log('unknown pc at ' + ip + ' ' + mac);
+              }
+            } else {
+              console.log('no mac for ' + ip);
+            }
+            done();
+          }
+        });
+      }
+    });
+  };
+}
+          
+
 var hostList;
 getHostList(function(err,hostList) {
   if (err) {
@@ -24,34 +53,10 @@ getHostList(function(err,hostList) {
   } else {
     var tasks = [];
     for (var i=1; i<256;i++) {
-      tasks.push(function(done) {
-        var ip='192.168.15.'+i;
-        console.log('scanning '+ip);
-        isHostUp(ip, function(err, isUp) {
-          console.log('done with '+ip);
-          console.log('isup = '+isUp);
-          if (isUp) {
-            arp.getMAC(ip, function(err,mac) {
-              if (err) {
-                console.log('error finding mac for '+ip);
-                done(err);
-              } else {
-                macLower = mac.toString().toLowerCase();
-                var entry = hostList[key];
-                if (entry) {
-                  console.log(entry.compdesc + ' is up');
-                } else {
-                  console.log('unkonwn pc at ' + ip);
-                }
-                done();
-              }
-            });
-          }
-        });
-      });
+      tasks.push(scan(hostList,'192.168.15.'+i));
     }
-    console.log('calling async now');
-    async.parallelLimit(tasks, 10, function(err) {
+
+    async.series(tasks, function(err) {
       console.log('done - '+err);
     });
   }
