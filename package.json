@@ -9,6 +9,7 @@
   "author": "Bert Kleewein",
   "license": "MIT",
   "dependencies": {
+    "async": "^2.0.1",
     "is-host-up": "git+https://github.com/BertKleewein/is-host-up.git",
     "node-arp": "^1.0.5"
   }
