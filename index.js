@@ -40,6 +40,8 @@ function scan(hostList,ip) {
             done();
           }
         });
+      } else {
+        done();
       }
     });
   };
@@ -56,7 +58,7 @@ getHostList(function(err,hostList) {
       tasks.push(scan(hostList,'192.168.15.'+i));
     }
 
-    async.series(tasks, function(err) {
+    async.parallelLimit(tasks, 5, function(err) {
       console.log('done - '+err);
     });
   }
